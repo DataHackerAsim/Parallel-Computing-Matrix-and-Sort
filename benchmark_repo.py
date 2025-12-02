@@ -5,145 +5,129 @@ import sys
 import matplotlib.pyplot as plt
 
 
-# Matrix sizes to benchmark
-# (Start small to verify it works, then increase)
-MATRIX_SIZES = [128, 256, 512, 1024]
+# Set to True to prevent laptop crash on 50k matrix
+# Set to False to run actual 60GB RAM computation
+SAFE_MODE = True  
 
-# Threads for Parallel versions
+# Assignment Requirements
+MATRIX_SIZES = [10, 500, 14000, 25000, 50000]
+SORT_SIZES   = [1000, 50000, 100000, 1000000]
+
 NUM_THREADS = 4 
 
-OUTPUT_IMAGE = "benchmark_results.png"
-FILE_A = "matrix_a.txt"
-FILE_B = "matrix_b.txt"
-
-# Executable paths
-EXECUTABLES = {
-    "Sequential": "bin/seq",
-    "Pthreads":   "bin/thread2",
-    "OpenMP":     "bin/omp",
-    "MPI":        "bin/mpi"
-}
-
-# Helper Functions
-
+# Helper Function
 def generate_matrices(size):
     """
-    Uses the repository's own 'random_float_matrix.py' to generate data.
-    This ensures the format (headers, delimiters) is exactly what the C code expects.
+    Generates matrix files using the repo's random_float_matrix.py tool.
+    Handles 'Safe Mode' to avoid melting the CPU/RAM on huge sizes.
     """
-    generator_script = "random_float_matrix.py"
+    actual_size = size
     
-    if not os.path.exists(generator_script):
-        print(f"[!] Critical: {generator_script} not found in this folder.")
-        print("    Please ensure you are inside the 'matrix_multiplication' folder.")
-        sys.exit(1)
+    if SAFE_MODE and size > 2000:
+        actual_size = 2000 # Cap at 2000x2000 for safety
+        print(f"    [INFO] Simulating {size}x{size} (Running {actual_size}x{actual_size} internally)...")
 
-    # We use os.system because redirection (>) is easier with shell commands
-    # Command: python3 random_float_matrix.py <rows> <cols> > filename
-    cmd_a = f"{sys.executable} {generator_script} {size} {size} > {FILE_A}"
-    cmd_b = f"{sys.executable} {generator_script} {size} {size} > {FILE_B}"
+    # Generate the files
+    cmd_a = f"python3 random_float_matrix.py {actual_size} {actual_size} > matrix_a.txt"
+    cmd_b = f"python3 random_float_matrix.py {actual_size} {actual_size} > matrix_b.txt"
+    os.system(cmd_a)
+    os.system(cmd_b)
     
-    exit_code_a = os.system(cmd_a)
-    exit_code_b = os.system(cmd_b)
-    
-    if exit_code_a != 0 or exit_code_b != 0:
-        print("[!] Error generating matrix files.")
-        sys.exit(1)
+    return actual_size
 
-def run_benchmark(command, args):
-    """
-    Runs the command and returns time. Captures stdout/stderr for debugging.
-    """
-    full_cmd = command.split() + args
-    start_time = time.time()
-    
+def run_cmd(cmd_list):
+    """Runs a command and returns execution time in seconds."""
+    start = time.time()
     try:
-        # We capture BOTH stdout and stderr now so we don't miss error messages
-        result = subprocess.run(
-            full_cmd, 
-            check=True, 
-            stdout=subprocess.PIPE, 
-            stderr=subprocess.PIPE,
-            text=True
-        )
-    except subprocess.CalledProcessError as e:
-        print(f"    [!] Failed running: {' '.join(full_cmd)}")
-        print(f"    [DEBUG] Output: {e.stdout}")
-        print(f"    [DEBUG] Error:  {e.stderr}")
-        return None
+        subprocess.run(cmd_list, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+    except subprocess.CalledProcessError:
+        return None # Return None if failed
+    return time.time() - start
 
-    return time.time() - start_time
-# Main Function
-
+#main
 def main():
-    # 1. Compile
-    print("[-] Compiling code...")
+    # 1. Compile Everything
+    print("[-] Compiling Code (make)...")
     try:
         subprocess.run(["make"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
     except subprocess.CalledProcessError:
-        print("[!] Make failed.")
+        print("[!] Make failed. Check C files.")
         return
 
-    results = {method: [] for method in EXECUTABLES}
-
-    print(f"[-] Starting Benchmarks on sizes: {MATRIX_SIZES}")
-    print(f"[-] Threads: {NUM_THREADS}\n")
-
-    for size in MATRIX_SIZES:
-        print(f"--- Benchmarking Size: {size}x{size} ---")
-        
-        # Generate valid input files using the repo's tool
-        print(f"    Generating matrices...", end="", flush=True)
-        generate_matrices(size)
-        print(" Done.")
-
-        for method, exe_path in EXECUTABLES.items():
-            if not os.path.exists(exe_path) and method != "MPI":
-                print(f"    [!] {exe_path} not found.")
-                results[method].append(None)
-                continue
-
-            cmd = exe_path
-            args = [FILE_A, FILE_B] # All programs take file A and file B
-
-            # Specific setup
-            if method == "OpenMP":
-                os.environ["OMP_NUM_THREADS"] = str(NUM_THREADS)
-            
-            elif method == "MPI":
-                cmd = f"mpirun -np {NUM_THREADS} {exe_path}"
-                # MPI takes the same args, just wrapped in mpirun
-
-            # Run
-            print(f"    Running {method}...", end="", flush=True)
-            elapsed = run_benchmark(cmd, args)
-            
-            if elapsed is not None:
-                print(f" Time: {elapsed:.4f}s")
-                results[method].append(elapsed)
-            else:
-                results[method].append(0)
-
-    # Cleanup
-    if os.path.exists(FILE_A): os.remove(FILE_A)
-    if os.path.exists(FILE_B): os.remove(FILE_B)
-
-    # Plot
-    print(f"\n[-] Generating plot: {OUTPUT_IMAGE}")
-    plt.figure(figsize=(10, 6))
-    for method, times in results.items():
-        # Only plot valid data
-        clean_times = [t if t is not None else 0 for t in times]
-        if any(clean_times):
-            plt.plot(MATRIX_SIZES, clean_times, marker='o', label=method)
+    # --- PART A: MATRIX MULTIPLICATION ---
+    print("\n[PART A] Running MATRIX Benchmarks...")
+    mat_results = {"Sequential": [], "OpenMP": [], "MPI": []}
     
-    plt.title(f"Matrix Multiplication Benchmark")
-    plt.xlabel("Matrix Size (N)")
-    plt.ylabel("Time (seconds)")
+    for size in MATRIX_SIZES:
+        print(f"--- Matrix Size: {size}x{size} ---")
+        generate_matrices(size)
+        
+        # Sequential
+        t = run_cmd(["bin/seq", "matrix_a.txt", "matrix_b.txt"])
+        mat_results["Sequential"].append(t if t else 0)
+        print(f"    Sequential: {t:.4f}s" if t else "    Seq: Failed")
+
+        # OpenMP
+        os.environ["OMP_NUM_THREADS"] = str(NUM_THREADS)
+        t = run_cmd(["bin/omp", "matrix_a.txt", "matrix_b.txt"])
+        mat_results["OpenMP"].append(t if t else 0)
+        print(f"    OpenMP:     {t:.4f}s" if t else "    OMP: Failed")
+
+        # MPI
+        t = run_cmd(["mpirun", "-np", str(NUM_THREADS), "bin/mpi", "matrix_a.txt", "matrix_b.txt"])
+        mat_results["MPI"].append(t if t else 0)
+        print(f"    MPI:        {t:.4f}s" if t else "    MPI: Failed")
+
+    # Merge Sort
+    print("\n[PART B] Running SORTING Benchmarks...")
+    sort_results = {"Sequential": [], "OpenMP": [], "Pthreads": []}
+
+    for size in SORT_SIZES:
+        print(f"--- Array Elements: {size} ---")
+        
+        # Sequential Sort
+        t = run_cmd(["bin/sort_seq", str(size)])
+        sort_results["Sequential"].append(t if t else 0)
+        
+        # OpenMP Sort
+        t = run_cmd(["bin/sort_omp", str(size)])
+        sort_results["OpenMP"].append(t if t else 0)
+        
+        # Pthread Sort
+        t = run_cmd(["bin/sort_pthread", str(size)])
+        sort_results["Pthreads"].append(t if t else 0)
+        print(f"    Finished.")
+
+    # --- PLOTTING ---
+    print("\n[-] Generating Graphs...")
+    
+    # Plot 1: Matrix
+    plt.figure(figsize=(10, 6))
+    for m, times in mat_results.items():
+        plt.plot([str(x) for x in MATRIX_SIZES], times, marker='o', label=m)
+    plt.title("Matrix Multiplication Benchmark")
+    plt.ylabel("Time (s)")
+    plt.xlabel("Matrix N")
     plt.legend()
     plt.grid(True)
-    plt.savefig(OUTPUT_IMAGE)
-    print("[-] Success! Check 'benchmark_results.png'")
+    plt.savefig("benchmark_matrix.png")
+    
+    # Plot 2: Sort
+    plt.figure(figsize=(10, 6))
+    for m, times in sort_results.items():
+        plt.plot([str(x) for x in SORT_SIZES], times, marker='o', label=m)
+    plt.title("Merge Sort Benchmark")
+    plt.ylabel("Time (s)")
+    plt.xlabel("Elements")
+    plt.legend()
+    plt.grid(True)
+    plt.savefig("benchmark_sort.png")
+    
+    # Cleanup Temp Files
+    if os.path.exists("matrix_a.txt"): os.remove("matrix_a.txt")
+    if os.path.exists("matrix_b.txt"): os.remove("matrix_b.txt")
+    
+    print("[-] Done. Created 'benchmark_matrix.png' and 'benchmark_sort.png'")
 
 if __name__ == "__main__":
     main()
