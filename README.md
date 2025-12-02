@@ -1,4 +1,4 @@
-# Assignment 4: Parallel Matrix Multiplication
+# High-Performance Matrix Multiplication Benchmark
 
 **Author:** Asim Ahmed  
 **Course:** Operating Systems
