@@ -1,8 +1,9 @@
 # Assignment 4: Parallel Matrix Multiplication
 
 **Author:** Asim Ahmed  
-**Course:** High Performance Computing  
+**Course:** Operating Systems
 **Institution:** NUST (Class of 2027)
+**Department:** School of Interdisciplinary Engineering and Sciences
 
 ## Overview
 This project benchmarks the performance of Matrix Multiplication using four different methods. It compares sequential execution against various parallel computing techniques.
