@@ -1,47 +1,50 @@
-# High-Performance Matrix Multiplication Benchmark
+# Parallel Computing Benchmark Suite
 
 **Author:** Asim Ahmed  
-**Course:** Operating Systems
-**Institution:** NUST (Class of 2027)
-**Department:** School of Interdisciplinary Engineering and Sciences
+**Department:** School of Interdisciplinary Engineering & Sciences (SINES)  
+**Institution:** National University of Sciences and Technology (NUST)  
+**Course:** Operating Systems (CS-220) | Class of 2027
 
-## Overview
-This project benchmarks the performance of Matrix Multiplication using four different methods. It compares sequential execution against various parallel computing techniques.
+---
 
-**Methods Implemented:**
-1.  **Sequential:** Baseline single-core implementation.
-2.  **Pthreads:** Multi-threading using POSIX threads.
-3.  **OpenMP:** Parallelization using compiler directives.
-4.  **MPI:** Distributed computing using Message Passing Interface.
+## 🚀 Project Overview
+This project provides a comprehensive performance analysis of parallel computing paradigms. It benchmarks the execution efficiency of **Matrix Multiplication** and **Merge Sort** algorithms across distinct parallel architectures versus standard sequential processing.
 
-## Prerequisites
-To run this project, ensure the following are installed on your system:
-* GCC Compiler (build-essential)
-* MPICH (for MPI)
-* Python 3
-* Matplotlib Library (`pip install matplotlib`)
+The goal is to evaluate speedup, efficiency, and overhead on multi-core systems using **Shared Memory** (Pthreads, OpenMP) and **Distributed Memory** (MPI) models.
 
-## How to Run
-Follow these steps to reproduce the benchmark results:
+## 📊 Algorithms & Implementations
 
-1.  **Compile the Code**
-    Run the makefile to build all executables:
-    ```bash
-    make
-    ```
+### Part 1: Matrix Multiplication
+We benchmark the operation $C = A \times B$ across the following implementations:
+* **Sequential:** Baseline single-core execution.
+* **OpenMP:** Loop-level parallelism using `#pragma omp parallel for`.
+* **MPI:** Process-level parallelism using Message Passing Interface (Scatter/Gather topology).
+* **Pthreads:** Explicit multi-threading with partitioned workload.
 
-2.  **Run the Benchmark Suite**
-    Execute the Python script to generate data, run tests, and plot results:
-    ```bash
-    python3 benchmark_repo.py
-    ```
+**Test Sizes ($N \times N$):** $10, 500, 14000, 25000, 50000$
 
-3.  **View Results**
-    The script generates a performance graph named `benchmark_results.png`.
+### Part 2: Sorting Algorithm (Merge Sort)
+We compare the sorting performance of integer arrays using:
+* **Sequential Merge Sort:** Standard recursive implementation.
+* **OpenMP Merge Sort:** Task-based parallelism (`#pragma omp task`).
+* **Pthreads Merge Sort:** Thread-based divide and conquer.
 
-## Project Structure
-* `src/`: Contains C source code for all implementations.
-* `bin/`: Stores the compiled executable files.
-* `benchmark_repo.py`: Automation script for testing and plotting.
-* `random_float_matrix.py`: Helper script for generating matrix data.
-* `Makefile`: Build configuration file.
+**Test Sizes (Elements):** $1k, 50k, 100k, 1M$
+
+---
+
+## 🛠️ Technical Requirements
+To replicate this benchmark, your system requires:
+* **OS:** Linux (Ubuntu/WSL recommended)
+* **Compiler:** GCC with `build-essential`
+* **MPI:** MPICH or OpenMPI (`sudo apt install mpich`)
+* **Python:** Python 3.x with `matplotlib` for visualization
+
+---
+
+## ⚡ How to Run
+
+### 1. Compilation
+A comprehensive `Makefile` is provided to build all executables (Matrix and Sorting versions).
+```bash
+make
