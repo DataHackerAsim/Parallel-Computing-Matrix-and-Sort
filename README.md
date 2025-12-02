@@ -7,12 +7,12 @@
 
 ---
 
-## 🚀 Project Overview
+## Project Overview
 This project provides a comprehensive performance analysis of parallel computing paradigms. It benchmarks the execution efficiency of **Matrix Multiplication** and **Merge Sort** algorithms across distinct parallel architectures versus standard sequential processing.
 
 The goal is to evaluate speedup, efficiency, and overhead on multi-core systems using **Shared Memory** (Pthreads, OpenMP) and **Distributed Memory** (MPI) models.
 
-## 📊 Algorithms & Implementations
+## Algorithms & Implementations
 
 ### Part 1: Matrix Multiplication
 We benchmark the operation $C = A \times B$ across the following implementations:
@@ -33,7 +33,7 @@ We compare the sorting performance of integer arrays using:
 
 ---
 
-## 🛠️ Technical Requirements
+## Technical Requirements
 To replicate this benchmark, your system requires:
 * **OS:** Linux (Ubuntu/WSL recommended)
 * **Compiler:** GCC with `build-essential`
@@ -42,7 +42,7 @@ To replicate this benchmark, your system requires:
 
 ---
 
-## ⚡ How to Run
+## How to Run
 
 ### 1. Compilation
 A comprehensive `Makefile` is provided to build all executables (Matrix and Sorting versions).
