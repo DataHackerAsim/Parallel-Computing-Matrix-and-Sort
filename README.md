@@ -3,7 +3,7 @@
 **Author:** Asim Ahmed  
 **Department:** School of Interdisciplinary Engineering & Sciences (SINES)  
 **Institution:** National University of Sciences and Technology (NUST)  
-**Course:** Operating Systems (CS-220) | Class of 2027
+**Course:** Operating Systems (CS-313) | Class of 2027
 
 ---
 
