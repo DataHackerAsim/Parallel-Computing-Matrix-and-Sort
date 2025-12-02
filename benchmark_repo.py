@@ -4,7 +4,7 @@ import os
 import sys
 import matplotlib.pyplot as plt
 
-# ================= CONFIGURATION =================
+
 # Matrix sizes to benchmark
 # (Start small to verify it works, then increase)
 MATRIX_SIZES = [128, 256, 512, 1024]
@@ -24,7 +24,7 @@ EXECUTABLES = {
     "MPI":        "bin/mpi"
 }
 
-# ================= HELPER FUNCTIONS =================
+# Helper Functions
 
 def generate_matrices(size):
     """
@@ -73,8 +73,7 @@ def run_benchmark(command, args):
         return None
 
     return time.time() - start_time
-
-# ================= MAIN EXECUTION =================
+# Main Function
 
 def main():
     # 1. Compile
